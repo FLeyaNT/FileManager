@@ -1,7 +1,4 @@
 from sqlalchemy import (
-    String,
-    UniqueConstraint,
-    BigInteger,
     ForeignKey,
     Enum
 )
@@ -25,10 +22,10 @@ class Operation(Base):
             values_callable=enum_values
         )
     )
-    path: Mapped[str | None] = mapped_column(String(1024))
     file_id: Mapped[int | None] = mapped_column(
         ForeignKey('files.id', ondelete='SET NULL')
     )
+    file_id_snapshot: Mapped[int | None]
     user_id: Mapped[int] = mapped_column(
         ForeignKey('users.id'),
         index=True

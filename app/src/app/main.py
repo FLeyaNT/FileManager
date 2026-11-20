@@ -4,7 +4,6 @@ import uvicorn
 
 from .create_app import create_app
 from .core.config import settings
-from .api.api import router
 
 
 logging.basicConfig(
@@ -14,8 +13,6 @@ logging.basicConfig(
 
 app = create_app()
 
-app.include_router(router)
-
 
 if __name__ == '__main__':
     uvicorn.run(
@@ -23,5 +20,5 @@ if __name__ == '__main__':
         host=settings.run.host,
         port=settings.run.port,
         reload=settings.run.reload,
-        reload_dirs=['app']
+        reload_dirs=['src']
     )

@@ -13,7 +13,7 @@ from .base import Base
 class User(Base):
     __tablename__ = 'users'
 
-    username: Mapped[int] = mapped_column(
+    username: Mapped[str] = mapped_column(
         String(50),
         unique=True
     )

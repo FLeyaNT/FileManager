@@ -68,10 +68,44 @@ class JWTConfig(BaseModel):
 
 
 class FilesConfig(BaseModel):
-    max_file_size: int = 10 * 1024 * 1024
+    max_file_size: int = Field(
+        default=10 * 1024 * 1024,
+        gt=0,
+    )
+
+    max_request_size: int = Field(
+        default=12 * 1024 * 1024,
+        gt=0,
+    )
+
+    max_user_size: int = Field(
+        default=100 * 1024 * 1024,
+        gt=0,
+    )
+
+    max_user_entries: int = Field(
+        default=1_000,
+        gt=0,
+    )
+
+    chunk_size: int = Field(
+        default=64 * 1024,
+        gt=0,
+    )
+
     zip_max_entries: int = 1_000
-    zip_max_total_size: int = 100 * 1024 * 1024
+    zip_max_total_size: int = 200 * 1024 * 1024
     zip_max_ratio: int = 100
+
+
+class CookieConfig(BaseModel):
+    name: str = 'access_token'
+    secure: bool = False
+    samesite: Literal[
+        "lax",
+        "strict",
+        "none"
+    ] = "lax"
 
 
 class Settings(BaseSettings):
@@ -86,8 +120,18 @@ class Settings(BaseSettings):
     fastapi: FastAPIConfig = FastAPIConfig()
     logging: LoggingConfig = LoggingConfig()
     files: FilesConfig = FilesConfig()
+    cookie: CookieConfig = CookieConfig()
     postgres: PostgresConfig
     jwt: JWTConfig
+
+    allowed_origins: list[str] = [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ]
+
+    storage_root: Path
 
 
 settings = Settings() # type: ignore[call-arg]

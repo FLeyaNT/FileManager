@@ -71,4 +71,5 @@ def downgrade() -> None:
     op.drop_table('files')
     op.drop_index(op.f('ix_users_id'), table_name='users')
     op.drop_table('users')
+    sa.Enum(name="operation_type").drop(op.get_bind(), checkfirst=True)
     # ### end Alembic commands ###
