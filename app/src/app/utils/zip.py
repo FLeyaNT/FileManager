@@ -110,7 +110,6 @@ def _plan(
 
         plan.append((info, parts))
 
-    # При распаковке папка назначения занимает запись даже для пустого ZIP.
     if free_entries is not None and free_entries < 1:
         raise QuotaExceededError()
 
@@ -120,7 +119,6 @@ def _plan(
 def _read_member(
     archive: ZipFile, info: ZipInfo, chunk_size: int
 ) -> Iterator[bytes]:
-    # The plan has already checked this size against all archive limits.
     remaining = info.file_size
     with archive.open(info) as src:
         while chunk := src.read(chunk_size):
@@ -146,7 +144,6 @@ def validate_zip(raw: bytes, limits: FilesConfig) -> None:
     try:
         with ZipFile(BytesIO(raw), "r") as archive:
             for info, parts in _plan(archive, limits):
-                # Reading each member checks its local header and CRC.
                 chunks = _read_member(archive, info, limits.chunk_size)
                 decoder = None if info.is_dir() else _document_decoder(parts[-1])
                 if decoder is None:

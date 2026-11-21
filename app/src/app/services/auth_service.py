@@ -1,18 +1,27 @@
 import asyncio
 import logging
+from datetime import UTC, datetime
 
+import jwt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
-    NotFoundError,
     UserAlreadyExistsError,
     AuthenticationError,
     StorageError,
 )
 from app.postgres.models import Directory, User
+from app.postgres.repositories.revoked_token_repo import RevokedTokenRepository
 from app.postgres.repositories.user_repo import UserRepository
-from app.core.security import hash_password, DUMMY_HASH, verify_password, create_access_token
+from app.core.security import (
+    AccessTokenClaims,
+    DUMMY_HASH,
+    create_access_token,
+    decode_access_token,
+    hash_password,
+    verify_password,
+)
 from app.services.user_dirs import UserDirectories
 
 
@@ -30,15 +39,33 @@ class AuthService:
         self._session = session
         self._users = user_repo
         self._dirs = user_dirs
+        self._revoked_tokens = RevokedTokenRepository(session)
 
-    async def get_user(
-        self,
-        user_id: int
-    ) -> User:
-        user = await self._users.get(user_id)
-        if not user:
-            raise NotFoundError('Пользователь не найден')
+    @staticmethod
+    def _read_token(token: str | None) -> AccessTokenClaims | None:
+        if token is None:
+            return None
+        try:
+            return decode_access_token(token)
+        except (jwt.PyJWTError, ValueError, OverflowError):
+            return None
+
+    async def authenticate(self, token: str | None) -> User:
+        claims = self._read_token(token)
+        if claims is None or await self._revoked_tokens.contains(claims.jti):
+            raise AuthenticationError('Не удалось проверить учётные данные')
+
+        user = await self._users.get(claims.user_id)
+        if user is None or claims.expires_at <= datetime.now(UTC):
+            raise AuthenticationError('Не удалось проверить учётные данные')
         return user
+
+    async def logout(self, token: str | None) -> None:
+        claims = self._read_token(token)
+        if claims is None:
+            return
+        await self._revoked_tokens.add(claims.jti, claims.expires_at)
+        await self._session.commit()
 
     async def register(
         self,

@@ -12,7 +12,6 @@ _WINDOWS_RESERVED = frozenset(
 )
 MAX_NAME_LENGTH = 255
 MAX_DEPTH = 32
-MAX_PATH_LENGTH = 250
 
 
 def validate_name(name: str) -> str:

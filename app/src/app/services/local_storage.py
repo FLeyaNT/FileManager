@@ -384,19 +384,6 @@ class LocalStorage:
             target=target
         )
 
-    async def create_dir(self, user_path: str) -> str:
-        target = await self._new_target(user_path)
-        return await self._create_dir_at(target)
-
-    async def create_file(
-        self,
-        user_path: str,
-        src: BinaryIO,
-        max_size: int
-    ) -> tuple[str, int]:
-        target = await self._new_target(user_path)
-        return await self._create_file_at(target, src, max_size)
-
     async def _write_file(
         self,
         src: BinaryIO,

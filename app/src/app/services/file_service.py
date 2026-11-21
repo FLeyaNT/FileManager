@@ -195,7 +195,7 @@ class FileService:
 
         try:
             data = content.encode('utf-8')
-        except UnicodeEncodeError as exc:
+        except UnicodeEncodeError:
             raise InvalidDocumentError(
                 'Текст содержит недопустимые символы'
             )

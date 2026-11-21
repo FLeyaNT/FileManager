@@ -1,5 +1,4 @@
 import re
-from reprlib import recursive_repr
 from typing import Annotated
 from xml.etree.ElementTree import Element, ParseError, TreeBuilder, tostring
 

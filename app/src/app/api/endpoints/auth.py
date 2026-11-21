@@ -1,12 +1,8 @@
-from typing import Annotated
-
 from fastapi import APIRouter, status, Response
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.util.preloaded import sql_util
 
 from app.api.cookies import set_auth_cookie, clear_auth_cookie
 from app.api.schemas.auth import LoginRequest, UserCreate, UserOut
-from app.api.deps.auth import AuthServiceDep, CurrentUser
+from app.api.deps.auth import AccessCookie, AuthServiceDep, CurrentUser
 
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
@@ -47,7 +43,8 @@ async def login(
     '/logout',
     status_code=status.HTTP_204_NO_CONTENT
 )
-async def logout(response: Response):
+async def logout(response: Response, token: AccessCookie, auth: AuthServiceDep):
+    await auth.logout(token)
     clear_auth_cookie(response)
 
 

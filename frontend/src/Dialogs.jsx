@@ -270,7 +270,7 @@ export function FileDialog({ item, close, switchAction, changed }) {
           <ErrorBox error={resource.error} retry={resource.retry} />
           {resource.loading && <Loading />}
           {content && !resource.error && !resource.loading && (
-            editing ? <label className="field"><span>Содержимое</span><textarea autoFocus className="code-input editor" rows={13} spellCheck={false} disabled={busy} value={draft} onChange={(event) => setDraft(event.target.value)} /></label>
+            editing ? <label className="field"><span>Содержимое</span><textarea autoFocus className="code-input" rows={13} spellCheck={false} disabled={busy} value={draft} onChange={(event) => setDraft(event.target.value)} /></label>
               : content.text === null ? <p className="preview-placeholder">{content.reason}</p> : <pre className="file-preview">{content.text || 'Пустой файл'}</pre>
           )}
           <ErrorBox error={error} />

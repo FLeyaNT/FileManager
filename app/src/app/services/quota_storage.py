@@ -1,9 +1,8 @@
 import os
 import stat
-from pathlib import Path as SyncPath
 from typing import BinaryIO, Self
 
-from anyio import Path, to_thread
+from anyio import Path
 
 from app.api.schemas.files import StorageUsageOut
 from app.core.exceptions import (
@@ -178,7 +177,6 @@ class QuotaStorage(LocalStorage):
         except OSError as exc:
             raise StorageError('Не удалось проверить квоту') from exc
 
-        # Замену можно сделать и сверх квоты, если файл не вырастет.
         quota_limit = info.st_size + max(0, self._byte_limit - used_bytes)
         try:
             return await self._replace_file_at(

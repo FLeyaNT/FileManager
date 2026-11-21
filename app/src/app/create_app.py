@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
+from anyio import create_task_group
 from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 
@@ -10,6 +11,7 @@ from app.api.deps.auth import verify_origin
 from app.api.handlers import register_exception_handlers
 from app.api.middlewares.body_limit import BodyLimitMiddleware
 from app.core.config import settings
+from app.services.token_cleanup import clean_expired_tokens
 from app.utils.postgres import (
     check_pg_conn,
     close_pg_conn
@@ -21,10 +23,15 @@ async def lifespan(
     _: FastAPI
 ) -> AsyncGenerator[None, None]:
     await check_pg_conn()
-
-    yield
-
-    await close_pg_conn()
+    try:
+        async with create_task_group() as tasks:
+            tasks.start_soon(clean_expired_tokens, settings.jwt.revoked_cleanup_interval_seconds)
+            try:
+                yield
+            finally:
+                tasks.cancel_scope.cancel()
+    finally:
+        await close_pg_conn()
 
 
 def create_app() -> FastAPI:
@@ -34,7 +41,6 @@ def create_app() -> FastAPI:
         dependencies=[Depends(verify_origin)]
     )
 
-    # PyCharm may flag Starlette's ParamSpec for this middleware factory.
     # noinspection PyTypeChecker
     app.add_middleware(
         BodyLimitMiddleware,

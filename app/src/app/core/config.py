@@ -52,19 +52,12 @@ class PostgresConfig(BaseModel):
             f'{self.port}/{self.db}'
         )
 
-    @property
-    def database_url(self) -> str:
-        return (
-            f'postgresql://'
-            f'{self.user}:{self.password}@{self.host}:'
-            f'{self.port}/{self.db}'
-        )
-
 
 class JWTConfig(BaseModel):
     jwt_secret: str = Field(min_length=32)
     jwt_algorithm: str = 'HS256'
     access_token_ttl_minutes: int = 30
+    revoked_cleanup_interval_seconds: int = Field(default=300, gt=0)
 
 
 class FilesConfig(BaseModel):
@@ -79,7 +72,7 @@ class FilesConfig(BaseModel):
     )
 
     max_user_size: int = Field(
-        default=100 * 1024 * 1024,
+        default=1 * 1024 * 1024,
         gt=0,
     )
 
@@ -94,7 +87,7 @@ class FilesConfig(BaseModel):
     )
 
     zip_max_entries: int = 1_000
-    zip_max_total_size: int = 200 * 1024 * 1024
+    zip_max_total_size: int = 100 * 1024 * 1024
     zip_max_ratio: int = 100
 
 
@@ -105,7 +98,7 @@ class CookieConfig(BaseModel):
         "lax",
         "strict",
         "none"
-    ] = "lax"
+    ] = "strict"
 
 
 class Settings(BaseSettings):

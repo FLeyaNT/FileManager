@@ -1,12 +1,10 @@
 from functools import lru_cache
 from typing import Annotated
 
-import jwt
 from fastapi import Depends, Request
 from fastapi.security import APIKeyCookie
 
-from app.core.exceptions import AuthenticationError, ForbiddenOriginError
-from app.core.security import decode_access_token
+from app.core.exceptions import ForbiddenOriginError
 from app.postgres.models import User
 from .session import SessionDep
 from app.services.auth_service import AuthService
@@ -19,6 +17,7 @@ cookie_scheme = APIKeyCookie(
     auto_error=False,
     description='JWT в HttpOnly-cookie'
 )
+AccessCookie = Annotated[str | None, Depends(cookie_scheme)]
 
 _UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -52,18 +51,9 @@ AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 
 
 async def get_current_user(
-    token: Annotated[str | None, Depends(cookie_scheme)],
+    token: AccessCookie,
     auth: AuthServiceDep,
 ) -> User:
-    if token is None:
-        raise AuthenticationError("Не удалось проверить учётные данные")
-    try:
-        user_id = decode_access_token(token)
-    except (jwt.PyJWTError, ValueError):
-        raise AuthenticationError("Не удалось проверить учётные данные") from None
-    user = await auth.get_user(user_id)
-    if user is None:
-        raise AuthenticationError("Не удалось проверить учётные данные")
-    return user
+    return await auth.authenticate(token)
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

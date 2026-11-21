@@ -19,8 +19,8 @@ async def check_pg_conn() -> None:
         logger.warning('DB health check timed out')
     except (SQLAlchemyError, OSError) as e:
         logger.warning('DB health check failed: %s', e)
-
-    logger.info('DB successfully connected')
+    else:
+        logger.info('DB successfully connected')
 
 
 async def close_pg_conn() -> None:
